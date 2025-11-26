@@ -1,0 +1,122 @@
+[
+  {
+    "exercise_name": "Barbell Press",
+    "exercise_description": "Press the barbell upward from your chest while lying flat on a bench.",
+    "image": "",
+    "body_part": "chest",
+    "difficulty": "medium",
+    "needs_equipment": true
+  },
+  {
+    "exercise_name": "Push-Ups",
+    "exercise_description": "Lower and raise your body by bending and extending your arms while keeping your core tight.",
+    "image": "",
+    "body_part": "chest",
+    "difficulty": "easy",
+    "needs_equipment": false
+  },
+  {
+    "exercise_name": "Dumbbell Shoulder Press",
+    "exercise_description": "Press dumbbells overhead while seated or standing to engage shoulders and triceps.",
+    "image": "",
+    "body_part": "arms",
+    "difficulty": "medium",
+    "needs_equipment": true
+  },
+  {
+    "exercise_name": "Bodyweight Squats",
+    "exercise_description": "Lower your hips back and down while keeping your chest upright, then stand back up.",
+    "image": "",
+    "body_part": "legs",
+    "difficulty": "easy",
+    "needs_equipment": false
+  },
+  {
+    "exercise_name": "Deadlift",
+    "exercise_description": "Lift a loaded barbell from the ground by extending your hips and knees.",
+    "image": "",
+    "body_part": "back",
+    "difficulty": "hard",
+    "needs_equipment": true
+  },
+  {
+    "exercise_name": "Plank Hold",
+    "exercise_description": "Hold a straight-body position with weight supported by forearms and toes.",
+    "image": "",
+    "body_part": "abs",
+    "difficulty": "medium",
+    "needs_equipment": false
+  },
+  {
+    "exercise_name": "Bicep Curls",
+    "exercise_description": "Curl the dumbbells upward by bending your elbows while keeping your upper arms still.",
+    "image": "",
+    "body_part": "arms",
+    "difficulty": "easy",
+    "needs_equipment": true
+  },
+  {
+    "exercise_name": "Lunges",
+    "exercise_description": "Step forward and lower your body until both knees are at 90 degrees, then push back up.",
+    "image": "",
+    "body_part": "legs",
+    "difficulty": "medium",
+    "needs_equipment": false
+  },
+  {
+    "exercise_name": "Lat Pulldown",
+    "exercise_description": "Pull the bar down toward your chest to engage the lats and upper back.",
+    "image": "",
+    "body_part": "back",
+    "difficulty": "medium",
+    "needs_equipment": true
+  },
+  {
+    "exercise_name": "Sit-Ups",
+    "exercise_description": "Lift your torso from a lying position to engage your abdominal muscles.",
+    "image": "",
+    "body_part": "abs",
+    "difficulty": "easy",
+    "needs_equipment": false
+  },
+  {
+    "exercise_name": "Tricep Dips",
+    "exercise_description": "Lower your body by bending your elbows behind you, then push back up to work the triceps.",
+    "image": "",
+    "body_part": "arms",
+    "difficulty": "medium",
+    "needs_equipment": false
+  },
+  {
+    "exercise_name": "Leg Press",
+    "exercise_description": "Push the weighted platform away from you using your legs while seated.",
+    "image": "",
+    "body_part": "legs",
+    "difficulty": "hard",
+    "needs_equipment": true
+  },
+  {
+    "exercise_name": "Russian Twists",
+    "exercise_description": "Twist your torso side to side while seated to activate the oblique muscles.",
+    "image": "",
+    "body_part": "abs",
+    "difficulty": "medium",
+    "needs_equipment": false
+  },
+  {
+    "exercise_name": "Bent Over Rows",
+    "exercise_description": "Pull a barbell toward your torso while hinging at the hips to target the back.",
+    "image": "",
+    "body_part": "back",
+    "difficulty": "medium",
+    "needs_equipment": true
+  },
+  {
+    "exercise_name": "Calf Raises",
+    "exercise_description": "Raise your heels off the ground and lower them slowly to strengthen your calves.",
+    "image": "",
+    "body_part": "legs",
+    "difficulty": "easy",
+    "needs_equipment": false
+  }
+]
