@@ -11,11 +11,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.mobile_integration_ca3.data.ExerciseRepository
+import com.example.mobile_integration_ca3.data.Exercise
 import com.example.mobile_integration_ca3.ui.theme.Mobile_Integration_CA3Theme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Get exercises with fetch function in ExerciseRepo file
+        val repository = ExerciseRepository(this)
+        val exercises = repository.loadExercises()
+
         enableEdgeToEdge()
         setContent {
             Mobile_Integration_CA3Theme {
