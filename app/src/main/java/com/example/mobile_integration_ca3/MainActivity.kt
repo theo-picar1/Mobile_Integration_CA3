@@ -38,7 +38,9 @@ class MainActivity : ComponentActivity() {
             Mobile_Integration_CA3Theme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     // Layout Exercise list on screen
-                    ExerciseList(exercises = exercises, modifier = Modifier.padding(innerPadding))
+                    ExerciseList(
+                        exercises = exercises,
+                        modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -76,21 +78,5 @@ fun ExerciseCard(exercise: Exercise, modifier: Modifier = Modifier) {
             Text(text = "Difficulty: ${exercise.difficulty}", style = MaterialTheme.typography.bodySmall)
             Text(text = "Needs Equipment: ${exercise.needs_equipment}", style = MaterialTheme.typography.bodySmall)
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Mobile_Integration_CA3Theme {
-        Greeting("Android")
     }
 }
