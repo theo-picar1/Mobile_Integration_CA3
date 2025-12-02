@@ -21,6 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.mobile_integration_ca3.data.ExerciseRepository
 import com.example.mobile_integration_ca3.data.Exercise
 import com.example.mobile_integration_ca3.ui.theme.Mobile_Integration_CA3Theme
@@ -29,18 +32,36 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Get exercises with fetch function in ExerciseRepo file
-        val repository = ExerciseRepository(this)
-        val exercises = repository.loadExercises()
-
         enableEdgeToEdge()
         setContent {
             Mobile_Integration_CA3Theme {
+                // Get exercises with fetch function in ExerciseRepo file
+                val repository = ExerciseRepository(this)
+                val exercises = repository.loadExercises()
+
+                val navController = rememberNavController()
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    // Layout Exercise list on screen
-                    ExerciseList(
-                        exercises = exercises,
-                        modifier = Modifier.padding(innerPadding))
+                    NavHost(
+                        navController = navController,
+                        startDestination = "exercises",
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        // Exercises screen (default screen)
+                        composable("exercises") {
+                            ExerciseList(
+                                exercises = exercises,
+                                modifier = Modifier.padding(innerPadding))
+                        }
+
+                        // Specific exercise screen
+                        composable("exercise/{name}") { backStackEntry ->
+                            val name = backStackEntry.arguments?.getString("name")!!
+                            val exercise = exercises.first { it.exercise_name == name }
+
+                            Exercise(exercise)
+                        }
+                    }
                 }
             }
         }
@@ -79,4 +100,9 @@ fun ExerciseCard(exercise: Exercise, modifier: Modifier = Modifier) {
             Text(text = "Needs Equipment: ${exercise.needs_equipment}", style = MaterialTheme.typography.bodySmall)
         }
     }
+}
+
+@Composable
+fun Exercise(exercise: Exercise, modifier: Modifier = Modifier) {
+    // Stuff
 }
