@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -19,7 +20,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -51,6 +51,9 @@ class MainActivity : ComponentActivity() {
                         composable("exercises") {
                             ExerciseList(
                                 exercises = exercises,
+                                onExerciseClick = { name ->
+                                    navController.navigate("exercise/$name")
+                                },
                                 modifier = Modifier.padding(innerPadding))
                         }
 
@@ -69,12 +72,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ExerciseList(exercises: List<Exercise>, modifier: Modifier = Modifier) {
+fun ExerciseList(exercises: List<Exercise>, onExerciseClick: (String) -> Unit, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         // Layout each Exercise on screen
         items(exercises) { exercise ->
             ExerciseCard(
                 exercise = exercise,
+                onExerciseClick = onExerciseClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -84,25 +88,78 @@ fun ExerciseList(exercises: List<Exercise>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ExerciseCard(exercise: Exercise, modifier: Modifier = Modifier) {
+fun ExerciseCard(exercise: Exercise, onExerciseClick: (String) -> Unit, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = exercise.exercise_name, style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = exercise.exercise_description, style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = exercise.image, style = MaterialTheme.typography.bodySmall)
-            Text(text = "Body Part: ${exercise.body_part}", style = MaterialTheme.typography.bodySmall)
-            Text(text = "Difficulty: ${exercise.difficulty}", style = MaterialTheme.typography.bodySmall)
-            Text(text = "Needs Equipment: ${exercise.needs_equipment}", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = exercise.exercise_name,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
+
+            Text(
+                text = exercise.image,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = "Body Part: ${exercise.body_part}",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = "Difficulty: ${exercise.difficulty}",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = "Needs Equipment: ${exercise.needs_equipment}",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(onClick = { onExerciseClick(exercise.exercise_name) }) {
+                Text("View Details")
+            }
         }
     }
 }
 
 @Composable
 fun Exercise(exercise: Exercise, modifier: Modifier = Modifier) {
-    // Stuff
+    Column(modifier = Modifier.padding(24.dp)) {
+        Text(
+            text = exercise.exercise_name,
+            style = MaterialTheme.typography.headlineMedium
+        )
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        Text(
+            text = "Description: ${exercise.exercise_description}"
+        )
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        Text(
+            text = "Image: ${exercise.image}"
+        )
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        Text(
+            text = "Body Part: ${exercise.body_part}"
+        )
+        Text(
+            text = "Difficulty: ${exercise.difficulty}"
+        )
+        Text(
+            text = "Needs Equipment: ${exercise.needs_equipment}"
+        )
+    }
 }
