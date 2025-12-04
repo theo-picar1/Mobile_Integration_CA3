@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,14 +17,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -30,6 +38,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mobile_integration_ca3.data.ExerciseRepository
 import com.example.mobile_integration_ca3.data.Exercise
 import com.example.mobile_integration_ca3.ui.theme.Mobile_Integration_CA3Theme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.lang.Boolean.toString
 
 class MainActivity : ComponentActivity() {
@@ -84,9 +94,10 @@ fun ExerciseList(
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         // Layout each Exercise on screen
-        items(exercises) { exercise ->
+        itemsIndexed(exercises) { index, exercise ->
             ExerciseCard(
                 exercise = exercise,
+                itemIndex = index,
                 onExerciseClick = onExerciseClick,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,11 +110,46 @@ fun ExerciseList(
 @Composable
 fun ExerciseCard(
     exercise: Exercise,
+    itemIndex: Int,
     onExerciseClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Track if card already visible (loaded)
+    val isVisible = rememberSaveable { mutableStateOf(false) }
+
+    val opacity = remember { Animatable(if (isVisible.value) 1f else 0f) }
+    val offsetY = remember { Animatable(if (isVisible.value) 0f else 50f) }
+
+    LaunchedEffect(key1 = exercise.exercise_name) {
+        if (!isVisible.value) {
+            delay(itemIndex % 10 * 100L)
+
+            launch {
+                opacity.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 500)
+                )
+            }
+            launch {
+                offsetY.animateTo(
+                    targetValue = 0f,
+                    animationSpec = tween(
+                        durationMillis = 500,
+                        easing = LinearEasing
+                    )
+                )
+            }
+            // Mark as visible so it doesn't animate again
+            isVisible.value = true
+        }
+    }
+
     Card(
-        modifier = modifier,
+        modifier = modifier
+            .graphicsLayer {
+                alpha = opacity.value
+                translationY = offsetY.value
+            },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
