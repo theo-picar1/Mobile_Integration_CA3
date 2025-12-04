@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -63,7 +64,10 @@ class MainActivity : ComponentActivity() {
 
                 val navController = rememberNavController()
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = MaterialTheme.colorScheme.background
+                ) { innerPadding ->
                     NavHost(
                         navController = navController,
                         startDestination = "exercises",
@@ -74,13 +78,12 @@ class MainActivity : ComponentActivity() {
                         // Exercises screen (default screen)
                         composable("exercises") {
                             Log.d(TAG, "NavHost: Navigated to 'exercises' screen.") // Log screen navigation
-                            ExerciseList(
+                            ExerciseListScreen(
                                 exercises = exercises,
                                 onExerciseClick = { name ->
                                     Log.i(TAG, "onExerciseClick: Navigating to details for '$name'.") // Log click event
                                     navController.navigate("exercise/$name")
-                                },
-                                modifier = Modifier.padding(innerPadding)
+                                }
                             )
                         }
 
@@ -99,6 +102,39 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExerciseListScreen(
+    exercises: List<Exercise>,
+    onExerciseClick: (String) -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Workout Explorer",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        ExerciseList(
+            exercises = exercises,
+            onExerciseClick = onExerciseClick,
+            modifier = Modifier.padding(innerPadding)
+        )
+    }
+}
+
+
 @Composable
 fun ExerciseList(
     exercises: List<Exercise>,
@@ -107,7 +143,10 @@ fun ExerciseList(
 ) {
     Log.v(TAG, "ExerciseList: Composing list with ${exercises.size} items.") // Log composable entry
 
-    LazyColumn(modifier = modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
+    ) {
         // Layout each Exercise on screen
         itemsIndexed(exercises) { index, exercise ->
             ExerciseCard(
@@ -170,36 +209,52 @@ fun ExerciseCard(
                 alpha = opacity.value
                 translationY = offsetY.value
             },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = exercise.exercise_name,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text(text = "Image: ${exercise.image}", style = MaterialTheme.typography.bodySmall)
+            Text(text = "Image: ${exercise.image}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 text = "Body Part: ${exercise.body_part}",
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = "Difficulty: ${exercise.difficulty}",
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = "Needs Equipment: ${exercise.needs_equipment}",
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(onClick = {
-                Log.d(TAG, "Button Click: 'View Details' for '${exercise.exercise_name}'.") // Log button click
-                onExerciseClick(exercise.exercise_name)
-            }) {
+            Button(
+                onClick = {
+                    Log.d(TAG, "Button Click: 'View Details' for '${exercise.exercise_name}'.") // Log button click
+                    onExerciseClick(exercise.exercise_name)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
                 Text("View Details")
             }
         }
@@ -217,13 +272,22 @@ fun ExerciseDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(exercise.exercise_name) },
+                title = { Text(exercise.exercise_name, color = MaterialTheme.colorScheme.onSurface) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                ),
                 navigationIcon = {
                     IconButton(onClick = {
                         Log.i(TAG, "IconButton Click: Back button pressed on detail screen.") // Log back press
                         navController.popBackStack()
                     }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             )
@@ -244,7 +308,7 @@ fun ExerciseDetailScreen(
                     .height(220.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.surface
                 ),
                 elevation = CardDefaults.cardElevation(6.dp)
             ) {
@@ -252,7 +316,10 @@ fun ExerciseDetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Image: ${exercise.image}")
+                    Text(
+                        "Image: ${exercise.image}",
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 }
             }
 
@@ -263,17 +330,28 @@ fun ExerciseDetailScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.surface
                 ),
                 elevation = CardDefaults.cardElevation(4.dp)
             ) {
                 Column(Modifier.padding(20.dp)) {
-                    Text("Description", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Description",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     Spacer(Modifier.height(6.dp))
-                    Text(exercise.exercise_description)
+                    Text(
+                        exercise.exercise_description,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
                     Spacer(Modifier.height(16.dp))
-                    Text("Details", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Details",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     Spacer(Modifier.height(10.dp))
 
                     DetailRow("Body Part", exercise.body_part)
@@ -295,7 +373,15 @@ fun DetailRow(label: String, value: String) {
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
