@@ -1,6 +1,7 @@
 package com.example.mobile_integration_ca3
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -42,16 +43,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.lang.Boolean.toString
 
+// Tag for logging in MainActivity and related functions
+private const val TAG = "MainActivity"
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate: Activity started.") // Log activity start
 
         enableEdgeToEdge()
         setContent {
+            Log.d(TAG, "setContent: Composable content setting up.") // Log content setup
+
             Mobile_Integration_CA3Theme {
                 // Get exercises with fetch function in ExerciseRepo file
                 val repository = ExerciseRepository(this)
                 val exercises = repository.loadExercises()
+                Log.d(TAG, "loadExercises: Loaded ${exercises.size} exercises.") // Log data load
 
                 val navController = rememberNavController()
 
@@ -61,11 +69,15 @@ class MainActivity : ComponentActivity() {
                         startDestination = "exercises",
                         modifier = Modifier.padding(innerPadding)
                     ) {
+                        Log.d(TAG, "NavHost: Setting up navigation graph.") // Log NavHost setup
+
                         // Exercises screen (default screen)
                         composable("exercises") {
+                            Log.d(TAG, "NavHost: Navigated to 'exercises' screen.") // Log screen navigation
                             ExerciseList(
                                 exercises = exercises,
                                 onExerciseClick = { name ->
+                                    Log.i(TAG, "onExerciseClick: Navigating to details for '$name'.") // Log click event
                                     navController.navigate("exercise/$name")
                                 },
                                 modifier = Modifier.padding(innerPadding)
@@ -76,6 +88,7 @@ class MainActivity : ComponentActivity() {
                         composable("exercise/{name}") { backStackEntry ->
                             val name = backStackEntry.arguments?.getString("name")!!
                             val exercise = exercises.first { it.exercise_name == name }
+                            Log.d(TAG, "NavHost: Navigated to 'exercise/$name' detail screen.") // Log screen navigation
 
                             ExerciseDetailScreen(exercise, navController)
                         }
@@ -92,6 +105,8 @@ fun ExerciseList(
     onExerciseClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Log.v(TAG, "ExerciseList: Composing list with ${exercises.size} items.") // Log composable entry
+
     LazyColumn(modifier = modifier.fillMaxSize()) {
         // Layout each Exercise on screen
         itemsIndexed(exercises) { index, exercise ->
@@ -114,6 +129,9 @@ fun ExerciseCard(
     onExerciseClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Log composition/recomposition of a specific card
+    Log.v(TAG, "ExerciseCard: Composing card for '${exercise.exercise_name}'.")
+
     // Track if card already visible (loaded)
     val isVisible = rememberSaveable { mutableStateOf(false) }
 
@@ -122,6 +140,7 @@ fun ExerciseCard(
 
     LaunchedEffect(key1 = exercise.exercise_name) {
         if (!isVisible.value) {
+            Log.d(TAG, "ExerciseCard: Starting animation for '${exercise.exercise_name}' at index $itemIndex.") // Log animation start
             delay(itemIndex % 10 * 100L)
 
             launch {
@@ -141,6 +160,7 @@ fun ExerciseCard(
             }
             // Mark as visible so it doesn't animate again
             isVisible.value = true
+            Log.v(TAG, "ExerciseCard: Animation finished for '${exercise.exercise_name}'.") // Log animation finish
         }
     }
 
@@ -176,7 +196,10 @@ fun ExerciseCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(onClick = { onExerciseClick(exercise.exercise_name) }) {
+            Button(onClick = {
+                Log.d(TAG, "Button Click: 'View Details' for '${exercise.exercise_name}'.") // Log button click
+                onExerciseClick(exercise.exercise_name)
+            }) {
                 Text("View Details")
             }
         }
@@ -189,13 +212,17 @@ fun ExerciseDetailScreen(
     exercise: Exercise,
     navController: NavController
 ) {
+    Log.d(TAG, "ExerciseDetailScreen: Composing details for '${exercise.exercise_name}'.") // Log screen entry
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(exercise.exercise_name) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        Log.i(TAG, "IconButton Click: Back button pressed on detail screen.") // Log back press
+                        navController.popBackStack()
+                    }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -260,6 +287,8 @@ fun ExerciseDetailScreen(
 
 @Composable
 fun DetailRow(label: String, value: String) {
+    Log.v(TAG, "DetailRow: Composing row - $label: $value") // Log detail row composition
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
