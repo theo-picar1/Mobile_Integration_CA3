@@ -1,16 +1,23 @@
 package com.example.mobile_integration_ca3.data
 
-import android.content.Context
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import android.util.Log
+private const val TAG = "ExerciseRepository"
 
-class ExerciseRepository(private val context: Context) {
-    fun loadExercises(): List<Exercise> {
-        val json = context.assets.open("exercises.json")
-            .bufferedReader()
-            .use { it.readText() }
-
-        val listType = object : TypeToken<List<Exercise>>() {}.type
-        return Gson().fromJson(json, listType)
+/**
+ * Repository class to handle data operations.
+ * It provides a clean API for the ViewModel to fetch data.
+ */
+class ExerciseRepository(
+    private val api: ExerciseApi
+) {
+    suspend fun fetchExercises(): List<Exercise> {
+        return try {
+            // Call the Retrofit service to get the data
+            api.getExercises()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to fetch exercises from API: ${e.message}")
+            // Throw the exception or return an empty list/special error object
+            throw e
+        }
     }
 }

@@ -8,38 +8,30 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.mobile_integration_ca3.data.ExerciseRepository
+import com.example.mobile_integration_ca3.data.RetrofitClient
 import com.example.mobile_integration_ca3.data.Exercise
+import com.example.mobile_integration_ca3.data.ExerciseRepository
 import com.example.mobile_integration_ca3.ui.theme.Mobile_Integration_CA3Theme
+import com.example.mobile_integration_ca3.viewmodel.ExerciseUiState
+import com.example.mobile_integration_ca3.viewmodel.ExerciseViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.lang.Boolean.toString
@@ -47,7 +39,30 @@ import java.lang.Boolean.toString
 // Tag for logging in MainActivity and related functions
 private const val TAG = "MainActivity"
 
+/**
+ * Factory class to instantiate the ViewModel with the required dependencies (the Repository).
+ */
+class ExerciseViewModelFactory(
+    private val repository: ExerciseRepository
+) : androidx.lifecycle.ViewModelProvider.Factory {
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ExerciseViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ExerciseViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+
 class MainActivity : ComponentActivity() {
+
+    // Create the Repository instance once, using the Retrofit service
+    private val repository = ExerciseRepository(RetrofitClient.apiService)
+
+    // Create the Factory for the ViewModel
+    private val viewModelFactory = ExerciseViewModelFactory(repository)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate: Activity started.") // Log activity start
@@ -57,10 +72,10 @@ class MainActivity : ComponentActivity() {
             Log.d(TAG, "setContent: Composable content setting up.") // Log content setup
 
             Mobile_Integration_CA3Theme {
-                // Get exercises with fetch function in ExerciseRepo file
-                val repository = ExerciseRepository(this)
-                val exercises = repository.loadExercises()
-                Log.d(TAG, "loadExercises: Loaded ${exercises.size} exercises.") // Log data load
+                // Get the ViewModel instance using the factory
+                val viewModel: ExerciseViewModel = viewModel(factory = viewModelFactory)
+                // Observe the UI state from the ViewModel
+                val uiState = viewModel.uiState
 
                 val navController = rememberNavController()
 
@@ -68,37 +83,79 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.background
                 ) { innerPadding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = "exercises",
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-                        Log.d(TAG, "NavHost: Setting up navigation graph.") // Log NavHost setup
 
-                        // Exercises screen (default screen)
-                        composable("exercises") {
-                            Log.d(TAG, "NavHost: Navigated to 'exercises' screen.") // Log screen navigation
-                            ExerciseListScreen(
-                                exercises = exercises,
-                                onExerciseClick = { name ->
-                                    Log.i(TAG, "onExerciseClick: Navigating to details for '$name'.") // Log click event
-                                    navController.navigate("exercise/$name")
+                    // Handling the State
+                    when (uiState) {
+                        is ExerciseUiState.Loading -> LoadingScreen(modifier = Modifier.padding(innerPadding))
+
+                        is ExerciseUiState.Error -> ErrorScreen(
+                            message = uiState.message,
+                            modifier = Modifier.padding(innerPadding)
+                        )
+
+                        is ExerciseUiState.Success -> {
+                            // If successful, proceed to set up navigation with the loaded exercises
+                            NavHost(
+                                navController = navController,
+                                startDestination = "exercises",
+                                modifier = Modifier.padding(innerPadding)
+                            ) {
+
+                                // Exercises screen (default screen)
+                                composable("exercises") {
+                                    Log.d(TAG, "NavHost: Navigated to 'exercises' screen.") // Log screen navigation
+                                    ExerciseListScreen(
+                                        exercises = uiState.exercises, // Use data from the state
+                                        onExerciseClick = { name ->
+                                            Log.i(TAG, "onExerciseClick: Navigating to details for '$name'.") // Log click event
+                                            navController.navigate("exercise/$name")
+                                        }
+                                    )
                                 }
-                            )
-                        }
 
-                        // Specific exercise screen
-                        composable("exercise/{name}") { backStackEntry ->
-                            val name = backStackEntry.arguments?.getString("name")!!
-                            val exercise = exercises.first { it.exercise_name == name }
-                            Log.d(TAG, "NavHost: Navigated to 'exercise/$name' detail screen.") // Log screen navigation
+                                // Specific exercise screen
+                                composable("exercise/{name}") { backStackEntry ->
+                                    val name = backStackEntry.arguments?.getString("name")!!
+                                    // Use the ViewModel to safely find the exercise
+                                    val exercise = viewModel.getExerciseByName(name)
 
-                            ExerciseDetailScreen(exercise, navController)
+                                    if (exercise != null) {
+                                        Log.d(TAG, "NavHost: Navigated to 'exercise/$name' detail screen.")
+                                        ExerciseDetailScreen(exercise, navController)
+                                    } else {
+                                        // Handle case where exercise is not found
+                                        Log.e(TAG, "NavHost: Exercise '$name' not found in state.")
+                                        navController.popBackStack() // Go back
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun LoadingScreen(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Loading Exercises...", style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Composable
+fun ErrorScreen(message: String, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+        Text(
+            "Error: $message",
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.titleMedium
+        )
     }
 }
 
