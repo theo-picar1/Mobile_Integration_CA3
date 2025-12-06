@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -41,6 +43,11 @@ import com.example.mobile_integration_ca3.viewmodel.ExerciseViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.lang.Boolean.toString
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.ui.text.style.TextAlign
 
 // Tag for logging in MainActivity and related functions
 private const val TAG = "MainActivity"
@@ -336,48 +343,97 @@ fun ExerciseCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp),
-        onClick = { onExerciseClick(exercise.exercise_name) }
+        onClick = {
+            Log.d(TAG, "Button Click: 'View Details' for '${exercise.exercise_name}'.") // Log button click
+            onExerciseClick(exercise.exercise_name)
+        }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = exercise.exercise_name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(text = "Image: ${exercise.image}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(
-                text = "Body Part: ${exercise.body_part}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "Difficulty: ${exercise.difficulty}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "Needs Equipment: ${exercise.needs_equipment}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    Log.d(TAG, "Button Click: 'View Details' for '${exercise.exercise_name}'.") // Log button click
-                    onExerciseClick(exercise.exercise_name)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary
-                ),
-                shape = RoundedCornerShape(8.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // LEFT PANE: Text Details (Takes 60% of width)
+            Column(
+                modifier = Modifier.weight(0.6f) // Allocate 60% of the space to text
             ) {
-                Text("View Details")
+                // Exercise Name
+                Text(
+                    text = exercise.exercise_name,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // (Body Part & Difficulty)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Body Part
+                    Icon(
+                        Icons.Filled.FitnessCenter,
+                        contentDescription = "Body Part",
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(exercise.body_part, style = MaterialTheme.typography.bodySmall)
+
+                    Spacer(Modifier.width(12.dp))
+
+                    // Difficulty
+                    Icon(
+                        Icons.Filled.TrendingUp,
+                        contentDescription = "Difficulty",
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(exercise.difficulty, style = MaterialTheme.typography.bodySmall)
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        Log.d(TAG, "Button Click: 'View Details' for '${exercise.exercise_name}'.") // Log button click
+                        onExerciseClick(exercise.exercise_name)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text("View Details", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // RIGHT PANE: Image (Takes 40% of width)
+            Box(
+                modifier = Modifier
+                    .weight(0.4f) // Allocate 40% of the space
+                    .aspectRatio(1f) // Ensure the box is square
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Filled.Image,
+                        contentDescription = "Image Placeholder",
+                        modifier = Modifier.size(32.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = exercise.image,
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
