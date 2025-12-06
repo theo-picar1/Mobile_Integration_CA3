@@ -234,7 +234,6 @@ fun ExerciseListScreen(
     }
 }
 
-
 @Composable
 fun ExerciseList(
     exercises: List<Exercise>,
@@ -522,6 +521,7 @@ private fun TwoPaneDetailLayout(exercise: Exercise, innerPadding: PaddingValues)
         )
     }
 }
+
 // IMAGE HELPER FUNCTION
 @Composable
 private fun ImageCard(exercise: Exercise, modifier: Modifier) {
@@ -544,6 +544,7 @@ private fun ImageCard(exercise: Exercise, modifier: Modifier) {
         }
     }
 }
+
 // DETAIL HELPER FUNCTION
 @Composable
 private fun DetailsCard(exercise: Exercise, modifier: Modifier) {
@@ -604,7 +605,7 @@ fun DetailRow(label: String, value: String) {
             value,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            textAlign = TextAlign.End,
             modifier = Modifier.weight(1f)
         )
     }
