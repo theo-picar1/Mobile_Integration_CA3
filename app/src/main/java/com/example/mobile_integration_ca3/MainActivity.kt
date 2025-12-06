@@ -10,9 +10,14 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
@@ -20,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -38,6 +44,26 @@ import java.lang.Boolean.toString
 
 // Tag for logging in MainActivity and related functions
 private const val TAG = "MainActivity"
+
+// WINDOW SIZE CLASS DEFINITION
+
+enum class WindowWidthClass { Compact, Medium, Expanded }
+
+/**
+ * Calculates the current window width class based on screen width.
+ * Standard breakpoints are 600dp (Medium) and 840dp (Expanded).
+ */
+@Composable
+fun getWindowWidthClass(): WindowWidthClass {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+
+    return when {
+        screenWidth < 600.dp -> WindowWidthClass.Compact
+        screenWidth < 840.dp -> WindowWidthClass.Medium
+        else -> WindowWidthClass.Expanded
+    }
+}
 
 /**
  * Factory class to instantiate the ViewModel with the required dependencies (the Repository).
@@ -77,6 +103,9 @@ class MainActivity : ComponentActivity() {
                 // Observe the UI state from the ViewModel
                 val uiState = viewModel.uiState
 
+                // Get the current screen width class
+                val widthClass = getWindowWidthClass()
+
                 val navController = rememberNavController()
 
                 Scaffold(
@@ -109,7 +138,8 @@ class MainActivity : ComponentActivity() {
                                         onExerciseClick = { name ->
                                             Log.i(TAG, "onExerciseClick: Navigating to details for '$name'.") // Log click event
                                             navController.navigate("exercise/$name")
-                                        }
+                                        },
+                                        widthClass = widthClass
                                     )
                                 }
 
@@ -121,7 +151,11 @@ class MainActivity : ComponentActivity() {
 
                                     if (exercise != null) {
                                         Log.d(TAG, "NavHost: Navigated to 'exercise/$name' detail screen.")
-                                        ExerciseDetailScreen(exercise, navController)
+                                        ExerciseDetailScreen(
+                                            exercise = exercise,
+                                            navController = navController,
+                                            widthClass = widthClass
+                                        )
                                     } else {
                                         // Handle case where exercise is not found
                                         Log.e(TAG, "NavHost: Exercise '$name' not found in state.")
@@ -163,7 +197,8 @@ fun ErrorScreen(message: String, modifier: Modifier = Modifier) {
 @Composable
 fun ExerciseListScreen(
     exercises: List<Exercise>,
-    onExerciseClick: (String) -> Unit
+    onExerciseClick: (String) -> Unit,
+    widthClass: WindowWidthClass
 ) {
     Scaffold(
         topBar = {
@@ -186,6 +221,7 @@ fun ExerciseListScreen(
         ExerciseList(
             exercises = exercises,
             onExerciseClick = onExerciseClick,
+            widthClass = widthClass,
             modifier = Modifier.padding(innerPadding)
         )
     }
@@ -196,24 +232,52 @@ fun ExerciseListScreen(
 fun ExerciseList(
     exercises: List<Exercise>,
     onExerciseClick: (String) -> Unit,
+    widthClass: WindowWidthClass,
     modifier: Modifier = Modifier
 ) {
     Log.v(TAG, "ExerciseList: Composing list with ${exercises.size} items.") // Log composable entry
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
-    ) {
-        // Layout each Exercise on screen
-        itemsIndexed(exercises) { index, exercise ->
-            ExerciseCard(
-                exercise = exercise,
-                itemIndex = index,
-                onExerciseClick = onExerciseClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+    val columnCount = when (widthClass) {
+        WindowWidthClass.Compact -> 1 // Phones, portrait mode
+        WindowWidthClass.Medium -> 2 // Small tablets, large phones, landscape mode
+        WindowWidthClass.Expanded -> 3 // Tablets, foldables
+    }
+
+    if (columnCount == 1) {
+        // Use LazyColumn for a single column layout (Compact)
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
+        ) {
+            // Layout each Exercise on screen
+            itemsIndexed(exercises) { index, exercise ->
+                ExerciseCard(
+                    exercise = exercise,
+                    itemIndex = index,
+                    onExerciseClick = onExerciseClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
+    } else {
+        // Use LazyVerticalGrid for multiple columns (Medium/Expanded)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(columnCount),
+            modifier = modifier.fillMaxSize().padding(horizontal = 8.dp),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            itemsIndexed(exercises) { index, exercise ->
+                ExerciseCard(
+                    exercise = exercise,
+                    itemIndex = index,
+                    onExerciseClick = onExerciseClick,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -271,7 +335,8 @@ fun ExerciseCard(
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        onClick = { onExerciseClick(exercise.exercise_name) }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -322,7 +387,8 @@ fun ExerciseCard(
 @Composable
 fun ExerciseDetailScreen(
     exercise: Exercise,
-    navController: NavController
+    navController: NavController,
+    widthClass: WindowWidthClass
 ) {
     Log.d(TAG, "ExerciseDetailScreen: Composing details for '${exercise.exercise_name}'.") // Log screen entry
 
@@ -351,71 +417,113 @@ fun ExerciseDetailScreen(
         },
     ) { innerPadding ->
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
+        // Apply a two-pane layout for Medium and Expanded width classes
+        if (widthClass == WindowWidthClass.Compact) {
+            // Default single-column layout for small screens (Compact)
+            SingleColumnDetailLayout(exercise, innerPadding)
+        } else {
+            // Two-pane layout for tablets and landscape orientation (Medium/Expanded)
+            TwoPaneDetailLayout(exercise, innerPadding)
+        }
+    }
+}
+
+// Helper Composable for the default single-column layout
+@Composable
+private fun SingleColumnDetailLayout(exercise: Exercise, innerPadding: PaddingValues) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .padding(16.dp)
+    ) {
+        ImageCard(exercise, Modifier.fillMaxWidth().height(220.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+        DetailsCard(exercise, Modifier.fillMaxWidth())
+    }
+}
+
+// Helper Composable for the two-pane (side-by-side) layout
+@Composable
+private fun TwoPaneDetailLayout(exercise: Exercise, innerPadding: PaddingValues) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        // Left Pane: Image (takes 40% of the space)
+        ImageCard(
+            exercise,
+            Modifier.weight(0.4f).fillMaxHeight()
+        )
+
+        // Right Pane: Details (takes 60% of the space)
+        DetailsCard(
+            exercise,
+            Modifier.weight(0.6f).fillMaxHeight()
+        )
+    }
+}
+// IMAGE HELPER FUNCTION
+@Composable
+private fun ImageCard(exercise: Exercise, modifier: Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(6.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
+            Text(
+                "Image: ${exercise.image}",
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+    }
+}
+// DETAIL HELPER FUNCTION
+@Composable
+private fun DetailsCard(exercise: Exercise, modifier: Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(Modifier.padding(20.dp)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())) {
+            Text(
+                "Description",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                exercise.exercise_description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-            // IMAGE CARD
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(6.dp)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "Image: ${exercise.image}",
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-            }
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "Details",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // DETAILS CARD
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Column(Modifier.padding(20.dp)) {
-                    Text(
-                        "Description",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        exercise.exercise_description,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        "Details",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(Modifier.height(10.dp))
-
-                    DetailRow("Body Part", exercise.body_part)
-                    DetailRow("Difficulty", exercise.difficulty)
-                    DetailRow("Equipment Needed", toString(exercise.needs_equipment))
-                }
-            }
+            DetailRow("Body Part", exercise.body_part)
+            DetailRow("Difficulty", exercise.difficulty)
+            DetailRow("Equipment Needed", toString(exercise.needs_equipment))
         }
     }
 }
@@ -433,12 +541,15 @@ fun DetailRow(label: String, value: String) {
         Text(
             label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f).padding(end = 8.dp)
         )
         Text(
             value,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            modifier = Modifier.weight(1f)
         )
     }
 }
