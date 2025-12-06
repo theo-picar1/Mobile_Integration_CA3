@@ -47,7 +47,9 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
+import coil.compose.AsyncImage
 
 // Tag for logging in MainActivity and related functions
 private const val TAG = "MainActivity"
@@ -427,10 +429,11 @@ fun ExerciseCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = exercise.image,
-                        style = MaterialTheme.typography.labelSmall,
-                        textAlign = TextAlign.Center
+                    AsyncImage(
+                        model = exercise.image,
+                        contentDescription = exercise.exercise_name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
@@ -537,9 +540,11 @@ private fun ImageCard(exercise: Exercise, modifier: Modifier) {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                "Image: ${exercise.image}",
-                color = MaterialTheme.colorScheme.onPrimary
+            AsyncImage(
+                model = exercise.image,
+                contentDescription = exercise.exercise_name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
         }
     }
