@@ -3,8 +3,7 @@ package com.example.mobile_integration_ca3.data
 import android.content.Context
 import androidx.room.Room
 
-
-// Repository class to handle data operations.
+// Repository class to handle data operations by combining ExerciseDao and ExerciseDatabase.
 class ExerciseRepository(
     private val api: ExerciseApi,
     private val context: Context
@@ -48,19 +47,4 @@ class ExerciseRepository(
             )
         }
     }
-
-    suspend fun getExerciseByName(name: String): Exercise? {
-        val entity = dao.getExerciseByName(name)
-        return entity?.let {
-            Exercise(
-                exercise_name = it.name,
-                exercise_description = it.description,
-                image = it.image,
-                body_part = it.bodyPart,
-                difficulty = it.difficulty,
-                needs_equipment = it.needsEquipment
-            )
-        }
-    }
-
 }

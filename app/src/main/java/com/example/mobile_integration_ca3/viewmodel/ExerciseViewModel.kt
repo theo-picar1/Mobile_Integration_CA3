@@ -7,6 +7,8 @@ import com.example.mobile_integration_ca3.data.Exercise
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
+// UI Logic
+
 class ExerciseViewModel(
     private val repository: ExerciseRepository
 ): ViewModel() {
@@ -33,6 +35,7 @@ class ExerciseViewModel(
         }
     }
 
+    // This is unique to ExerciseViewModal. Was probably a good idea to put this inside ExerciseRepository instead
     fun getExerciseByName(name: String): Exercise? {
         val currentState = uiState.value
 

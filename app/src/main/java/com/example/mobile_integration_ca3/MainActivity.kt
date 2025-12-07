@@ -93,18 +93,19 @@ class ExerciseViewModelFactory(
 class MainActivity : ComponentActivity() {
 
     // Create the Repository instance once, using the Retrofit service
-    private val repository = ExerciseRepository(
-        api = RetrofitClient.apiService,
-        context = applicationContext
-    )
-
-
-    // Create the Factory for the ViewModel
-    private val viewModelFactory = ExerciseViewModelFactory(repository)
+    private lateinit var repository: ExerciseRepository
+    private lateinit var viewModelFactory: ExerciseViewModelFactory
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate: Activity started.") // Log activity start
+
+        repository = ExerciseRepository(
+            api = RetrofitClient.apiService,
+            context = applicationContext
+        )
+
+        viewModelFactory = ExerciseViewModelFactory(repository)
 
         enableEdgeToEdge()
         setContent {
@@ -127,8 +128,12 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
 
                     when (uiState) {
-                        is ExerciseUiState.Loading -> {}
-                        is ExerciseUiState.Error -> {}
+                        is ExerciseUiState.Loading -> {
+                            LoadingScreen()
+                        }
+                        is ExerciseUiState.Error -> {
+                            ErrorScreen((uiState as ExerciseUiState.Error).message ?: "Unknown error")
+                        }
                         is ExerciseUiState.Success -> {
                             val exercises = (uiState as ExerciseUiState.Success).exercises
 

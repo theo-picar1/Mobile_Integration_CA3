@@ -3,6 +3,8 @@ package com.example.mobile_integration_ca3.data
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
+// This file represents the actual database
+
 @Database(
     entities = [ExerciseEntity::class],
     version = 1,

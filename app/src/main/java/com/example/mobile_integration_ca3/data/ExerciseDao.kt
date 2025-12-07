@@ -5,6 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
+// Holds all SQL operations
+
 @Dao
 interface ExerciseDao {
 

@@ -1,5 +1,7 @@
 package com.example.mobile_integration_ca3.data
 
+// For fetching the JSON from assets, via URL which is just our link to our github
+
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
