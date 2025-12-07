@@ -93,7 +93,11 @@ class ExerciseViewModelFactory(
 class MainActivity : ComponentActivity() {
 
     // Create the Repository instance once, using the Retrofit service
-    private val repository = ExerciseRepository(RetrofitClient.apiService)
+    private val repository = ExerciseRepository(
+        api = RetrofitClient.apiService,
+        context = applicationContext
+    )
+
 
     // Create the Factory for the ViewModel
     private val viewModelFactory = ExerciseViewModelFactory(repository)
@@ -104,17 +108,17 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            Log.d(TAG, "setContent: Composable content setting up.") // Log content setup
+            Log.d(TAG, "setContent: Composable content setting up.")
+            val viewModel: ExerciseViewModel = viewModel(factory = viewModelFactory)
+            val uiState by viewModel.uiState.collectAsState()
+
+            LaunchedEffect(Unit) {
+                viewModel.loadExercises()
+            }
 
             Mobile_Integration_CA3Theme {
-                // Get the ViewModel instance using the factory
-                val viewModel: ExerciseViewModel = viewModel(factory = viewModelFactory)
-                // Observe the UI state from the ViewModel
-                val uiState = viewModel.uiState
 
-                // Get the current screen width class
                 val widthClass = getWindowWidthClass()
-
                 val navController = rememberNavController()
 
                 Scaffold(
@@ -122,53 +126,40 @@ class MainActivity : ComponentActivity() {
                     containerColor = MaterialTheme.colorScheme.background
                 ) { innerPadding ->
 
-                    // Handling the State
                     when (uiState) {
-                        is ExerciseUiState.Loading -> LoadingScreen(modifier = Modifier.padding(innerPadding))
-
-                        is ExerciseUiState.Error -> ErrorScreen(
-                            message = uiState.message,
-                            modifier = Modifier.padding(innerPadding)
-                        )
-
+                        is ExerciseUiState.Loading -> {}
+                        is ExerciseUiState.Error -> {}
                         is ExerciseUiState.Success -> {
-                            // If successful, proceed to set up navigation with the loaded exercises
+                            val exercises = (uiState as ExerciseUiState.Success).exercises
+
                             NavHost(
                                 navController = navController,
                                 startDestination = "exercises",
                                 modifier = Modifier.padding(innerPadding)
                             ) {
-
-                                // Exercises screen (default screen)
                                 composable("exercises") {
-                                    Log.d(TAG, "NavHost: Navigated to 'exercises' screen.") // Log screen navigation
                                     ExerciseListScreen(
-                                        exercises = uiState.exercises, // Use data from the state
+                                        exercises = exercises,
                                         onExerciseClick = { name ->
-                                            Log.i(TAG, "onExerciseClick: Navigating to details for '$name'.") // Log click event
                                             navController.navigate("exercise/$name")
                                         },
                                         widthClass = widthClass
                                     )
                                 }
 
-                                // Specific exercise screen
                                 composable("exercise/{name}") { backStackEntry ->
                                     val name = backStackEntry.arguments?.getString("name")!!
-                                    // Use the ViewModel to safely find the exercise
+
                                     val exercise = viewModel.getExerciseByName(name)
 
                                     if (exercise != null) {
-                                        Log.d(TAG, "NavHost: Navigated to 'exercise/$name' detail screen.")
                                         ExerciseDetailScreen(
                                             exercise = exercise,
                                             navController = navController,
                                             widthClass = widthClass
                                         )
                                     } else {
-                                        // Handle case where exercise is not found
-                                        Log.e(TAG, "NavHost: Exercise '$name' not found in state.")
-                                        navController.popBackStack() // Go back
+                                        navController.popBackStack()
                                     }
                                 }
                             }
